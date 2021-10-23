@@ -1,32 +1,16 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-    <header class="header--main-page">
-      <nav class="container container--70">
-        <ul class="nav--actions">
-          <li><a href="{% url 'login' %}" class="btn btn--small btn--without-border">Zaloguj</a></li>
-          <li><a href="{% url 'register' %}" class="btn btn--small btn--highlighted">Załóż konto</a></li>
-        </ul>
-
-        <ul>
-          <li><a href="" class="btn btn--without-border active">Start</a></li>
-          <li><a href="#steps" class="btn btn--without-border">O co chodzi?</a></li>
-          <li><a href="#about-us" class="btn btn--without-border">O nas</a></li>
-          <li><a href="#help" class="btn btn--without-border">Fundacje i organizacje</a></li>
-          <li><a href="{% url 'add_donation' %}" class="btn btn--without-border">Przekaż dary</a></li>
-          <li><a href="#contact" class="btn btn--without-border">Kontakt</a></li>
-        </ul>
-      </nav>
-
-      <div class="slogan container container--90">
-        <div class="slogan--item">
-          <h1>
-            Zacznij pomagać!<br />
-            Oddaj niechciane rzeczy w zaufane ręce
-          </h1>
-        </div>
-      </div>
-    </header>
+{#    <header class="header--main-page">#}
+{#      <div class="slogan container container--90">#}
+{#        <div class="slogan--item">#}
+{#          <h1>#}
+{#            Zacznij pomagać!<br />#}
+{#            Oddaj niechciane rzeczy w zaufane ręce#}
+{#          </h1>#}
+{#        </div>#}
+{#      </div>#}
+{#    </header>#}
 
     <section id="stats" class="stats">
       <div class="container container--85">
@@ -105,7 +89,7 @@
 
                 <div class="col"><div class="text">
                     {% for category in foundation.categories.all %}
-                        {{ category }}
+                        {{ category }},
                     {% endfor %}
                     </div></div>
               </li>
@@ -123,29 +107,6 @@
           <li><a href="#" class="btn btn--small btn--without-border" data-page="2">2</a></li>
           <li><a href="#" class="btn btn--small btn--without-border" data-page="3">3</a></li>
         </ul>
-{#          <div class="pagination">#}
-{#            <ul class="help--slides-pagination">#}
-{#                {% if foundations.has_previous %}#}
-{#                    <li><a href="?foundations_page={{ foundations.previous_page_number }}#help" class="btn btn--small btn--without-border active">&#60 poprzednia</a></li>#}
-{#                {% endif %}#}
-{##}
-{#                {% for page in foundations.paginator.page_range %}#}
-{#                    {% if page == foundations.number %}#}
-{#                        <li class="btn btn--small btn--without-border active">#}
-{#                            {{ foundations.number }}#}
-{#                        </li>#}
-{#                    {% else %}#}
-{#                        <li class="btn btn--small btn--without-border active">#}
-{#                            <a style="color: dimgray" href="?foundations_page={{ page }}#help">{{ page }}</a>#}
-{#                        </li>#}
-{#                    {% endif %}#}
-{##}
-{#                {% endfor %}#}
-{#                {% if foundations.has_next %}#}
-{#                    <li><a href="?foundations_page={{ foundations.next_page_number }}#help" class="btn btn--small btn--without-border active">następna &#62</a></li>#}
-{#                {% endif %}#}
-{#            </ul>#}
-{#          </div>#}
       </div>
 
 
@@ -165,38 +126,11 @@
 
                 <div class="col"><div class="text">
                     {% for category in organization.categories.all %}
-                        {{ category }}
+                        {{ category }},
                     {% endfor %}
                 </div></div>
               </li>
             {% endfor %}
-
-{#          <li>#}
-{#            <div class="col">#}
-{#              <div class="title">Organizacja 2</div>#}
-{#              <div class="subtitle">Lorem ipsum dolor sit amet consectetur.</div>#}
-{#            </div>#}
-{##}
-{#            <div class="col"><div class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</div></div>#}
-{#          </li>#}
-{##}
-{#          <li>#}
-{#            <div class="col">#}
-{#              <div class="title">Organizacja 3</div>#}
-{#              <div class="subtitle">Lorem ipsum dolor sit amet consectetur.</div>#}
-{#            </div>#}
-{##}
-{#            <div class="col"><div class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</div></div>#}
-{#          </li>#}
-{##}
-{#          <li>#}
-{#            <div class="col">#}
-{#              <div class="title">Organizacja 4</div>#}
-{#              <div class="subtitle">Lorem ipsum dolor sit amet consectetur.</div>#}
-{#            </div>#}
-{##}
-{#            <div class="col"><div class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</div></div>#}
-{#          </li>#}
         </ul>
 
         <!-- Pagination
@@ -223,20 +157,11 @@
 
                 <div class="col"><div class="text">
                     {% for category in local_collection.categories.all %}
-                        {{ category }}
+                        {{ category }},
                     {% endfor %}
                 </div></div>
               </li>
             {% endfor %}
-
-{#          <li>#}
-{#            <div class="col">#}
-{#              <div class="title">Lokalna zbiórka 2</div>#}
-{#              <div class="subtitle">Lorem ipsum dolor sit amet consectetur.</div>#}
-{#            </div>#}
-{##}
-{#            <div class="col"><div class="text">Lorem ipsum dolor sit amet consectetur adipisicing elit.</div></div>#}
-{#          </li>#}
         </ul>
 
         <!-- Pagination

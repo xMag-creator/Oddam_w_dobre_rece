@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import EmailValidator
 
 
 class ContactForm(forms.Form):
@@ -19,6 +20,7 @@ class LoginForm(forms.Form):
 class RegisterForm(forms.Form):
     name = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Imię'}))
     surname = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
-    email = forms.CharField(widget=forms.EmailInput(attrs={'placeholder': 'Email'}))
+    email = forms.CharField(widget=forms.EmailInput(attrs={'placeholder': 'Email'}),
+                            validators=[EmailValidator(message='Błędny e-mail.', allowlist=['example.net'])])
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
     repeat_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))

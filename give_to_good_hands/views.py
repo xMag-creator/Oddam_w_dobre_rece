@@ -1,6 +1,8 @@
-from django.shortcuts import render
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, redirect
 from django.views import View
 from django.db.models import Sum
+from django.contrib.auth.models import User
 from give_to_good_hands.models import Institution, Donation
 from give_to_good_hands.form import ContactForm, AddDonationForm, LoginForm, RegisterForm
 
@@ -26,6 +28,11 @@ class LandingPageView(View):
         # local collections paginator
         local_collections_list = Institution.objects.filter(type=2).order_by('pk')
 
+        user = request.user
+        logged = False
+        if user.is_authenticated:
+            logged = True
+
         context = {
             'contact_form': form,
             'copyright_year': 2019,
@@ -34,6 +41,9 @@ class LandingPageView(View):
             'foundations': foundations_list,
             'organizations': organizations_list,
             'local_collections': local_collections_list,
+            'logged': logged,
+            'header': 'index',
+            'header_class': 'header--main-page',
 
         }
         return render(request, self.template_name, context)
@@ -48,11 +58,19 @@ class AddDonationView(View):
     def get(self, request, *args, **kwargs):
         form = self.form_class
         contact_form = self.contact_form
+
+        user = request.user
+        logged = False
+        if user.is_authenticated:
+            logged = True
+
         context = {
             'form': form,
             'contact_form': contact_form,
             'copyright_year': 2018,
-
+            'logged': logged,
+            'header': 'form',
+            'header_class': 'header--form-page',
         }
         return render(request, self.template_name, context)
 
@@ -74,6 +92,19 @@ class LoginView(View):
         }
         return render(request, self.template_name, context)
 
+    def post(self, request, *args, **kwargs):
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password')
+
+            user = authenticate(username=email, password=password)
+            if user:
+                login(request, user)
+                return redirect('/')
+            else:
+                return redirect('/register/')
+
 
 class RegisterView(View):
     # register view
@@ -91,3 +122,31 @@ class RegisterView(View):
 
         }
         return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data.get('name')
+            surname = form.cleaned_data.get('surname')
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password')
+            repeat_password = form.cleaned_data.get('repeat_password')
+
+            User.objects.create_user(username=email,
+                                     first_name=name,
+                                     last_name=surname,
+                                     email=email,
+                                     password=password)
+            return redirect('/login/')
+        else:
+            context = {
+                'form': form,
+
+            }
+            return render(request, self.template_name, context)
+
+
+class LogoutView(View):
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return redirect('/')
