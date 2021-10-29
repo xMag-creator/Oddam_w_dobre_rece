@@ -1,5 +1,6 @@
 from django import forms
 from django.core.validators import EmailValidator
+from give_to_good_hands.models import Institution, Category, Donation
 
 
 class ContactForm(forms.Form):
@@ -9,7 +10,18 @@ class ContactForm(forms.Form):
 
 
 class AddDonationForm(forms.Form):
-    pass
+    quantity = forms.IntegerField(min_value=1)
+    categories = forms.ModelChoiceField(widget=forms.CheckboxSelectMultiple,
+                                        queryset=Category.objects.all(),
+                                        empty_label=None)
+    institution = forms.IntegerField()
+    address = forms.CharField(label='Ulica', max_length=256)
+    phone_number = forms.CharField(label='Numer telefonu', max_length=16)
+    city = forms.CharField(label='Miasto', max_length=128)
+    zip_code = forms.CharField(label='Kod pocztowy', max_length=6)
+    pick_up_date = forms.DateField(label='Data')
+    pick_up_time = forms.TimeField(label='Godzina')
+    pick_up_comment = forms.CharField(label='Uwagi dla kuriera', widget=forms.Textarea(attrs={'row': 5}))
 
 
 class LoginForm(forms.Form):

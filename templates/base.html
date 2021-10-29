@@ -18,6 +18,9 @@
                         <ul class="dropdown">
                             <li><a href="#">Profil</a></li>
                             <li><a href="#">Ustawienia</a></li>
+                            {% if superuser %}
+                            <li><a href="/admin/">Panel Administracyjny</a></li>
+                            {% endif %}
                             <li><a href="{% url 'logout' %}">Wyloguj</a></li>
                         </ul>
                     </li>
@@ -36,50 +39,10 @@
               <li><a href="#contact" class="btn btn--without-border">Kontakt</a></li>
             </ul>
         </nav>
-        {% if header == 'index' %}
-            <div class="slogan container container--90">
-                <div class="slogan--item">
-                    <h1>
-                        Zacznij pomagać!<br />
-                        Oddaj niechciane rzeczy w zaufane ręce
-                    </h1>
-                </div>
-            </div>
-        {% elif header == 'form' %}
-            <div class="slogan container container--90">
-                <div class="slogan--item">
-                  <h1>
-                    Oddaj rzeczy, których już nie chcesz<br />
-                    <span class="uppercase">potrzebującym</span>
-                  </h1>
 
-                  <div class="slogan--steps">
-                    <div class="slogan--steps-title">Wystarczą 4 proste kroki:</div>
-                    <ul class="slogan--steps-boxes">
-                      <li>
-                        <div><em>1</em><span>Wybierz rzeczy</span></div>
-                      </li>
-                      <li>
-                        <div><em>2</em><span>Spakuj je w worki</span></div>
-                      </li>
-                      <li>
-                        <div><em>3</em><span>Wybierz fundację</span></div>
-                      </li>
-                      <li>
-                        <div><em>4</em><span>Zamów kuriera</span></div>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-            </div>
-        {% elif header == 'form-confirmation' %}
-            <div class="slogan container container--90">
-              <h2>
-                Dziękujemy za przesłanie formularza Na maila prześlemy wszelkie
-                informacje o odbiorze.
-              </h2>
-            </div>
-        {% endif %}
+    {% block additional_head %}
+
+    {% endblock %}
     </header>
 
     {% block content %}

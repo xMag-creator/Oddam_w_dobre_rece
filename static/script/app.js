@@ -196,8 +196,10 @@ document.addEventListener("DOMContentLoaded", function() {
       this.$next.forEach(btn => {
         btn.addEventListener("click", e => {
           e.preventDefault();
-          this.currentStep++;
-          this.updateForm();
+          if (this.validation(this.currentStep)) {
+            this.currentStep++;
+            this.updateForm();
+          }
         });
       });
 
@@ -211,7 +213,22 @@ document.addEventListener("DOMContentLoaded", function() {
       });
 
       // Form submit
-      this.$form.querySelector("form").addEventListener("submit", e => this.submit(e));
+      this.$form.querySelector("form").addEventListener("submit", e => this.$form.submit(e));
+
+      // Filter institutions by chosen categories
+      this.$form.querySelector('#secondNextButton').addEventListener("click", e => {
+        const catArr = this.getCategories(e);
+        this.noneDisplayInstitutionsStep3(e);
+        this.displayCorrectInstitutions(e, catArr);
+      });
+
+      // Generate summary
+      this.$form.querySelector("#fourthNextButton").addEventListener("click", e => {
+        const institutionName = this.checkChosenInstitution(e);
+        const bagsQuantity = this.getQuantityOfBags(e);
+        const address = this.getAddress(e);
+        this.updateSummary(e, institutionName, bagsQuantity, address);
+      });
     }
 
     /**
@@ -219,9 +236,8 @@ document.addEventListener("DOMContentLoaded", function() {
      * Show next or previous section etc.
      */
     updateForm() {
-      this.$step.innerText = this.currentStep;
 
-      // TODO: Validation
+      this.$step.innerText = this.currentStep;
 
       this.slides.forEach(slide => {
         slide.classList.remove("active");
@@ -234,7 +250,6 @@ document.addEventListener("DOMContentLoaded", function() {
       this.$stepInstructions[0].parentElement.parentElement.hidden = this.currentStep >= 6;
       this.$step.parentElement.hidden = this.currentStep >= 6;
 
-      // TODO: get data from inputs and show them in summary
     }
 
     /**
@@ -247,6 +262,172 @@ document.addEventListener("DOMContentLoaded", function() {
       this.currentStep++;
       this.updateForm();
     }
+
+    /**
+     * Get categories from first step
+     * @param e
+     * @returns {*[]}
+     */
+    getCategories(e) {
+      const categories = []
+      const categoriesCheckboxes = this.$form.querySelector("#step1").querySelectorAll("div.form-group--checkbox");
+      categoriesCheckboxes.forEach((element) => {
+        if(element.querySelector("input").checked){
+          categories.push(element.querySelector("span.description").innerHTML);
+        }
+      });
+
+      return categories
+    }
+
+    /**
+     * Deactivate all div's in step 3
+     * @param e
+     */
+
+    noneDisplayInstitutionsStep3(e) {
+      const checkBoxes = this.$form.querySelector("#step3").querySelectorAll("div.form-group--checkbox");
+      checkBoxes.forEach((element) => element.style.display='none');
+    }
+
+    /**
+     * Show correct institutions
+     * @param e
+     * @param catArr
+     */
+    displayCorrectInstitutions(e, catArr) {
+      const checkBoxes = this.$form.querySelector("#step3").querySelectorAll("div.form-group--checkbox");
+      checkBoxes.forEach(element => {
+        let matched = 0
+        element.querySelectorAll("#category").forEach(element => {
+          catArr.forEach(cat => {
+            if(cat === element.innerHTML) {
+              matched++;
+            }
+          });
+        });
+        if(matched === catArr.length) {
+          element.style.display='block'
+        }
+      });
+    }
+
+    /**
+     * Check which institution was chosen and return institution name
+     * @param e
+     * @return string
+     */
+    checkChosenInstitution(e) {
+      let instName = "";
+      this.$form.querySelectorAll("#step3 div.form-group--checkbox").forEach(element => {
+        if(element.querySelector("input").checked) {
+          instName = element.querySelector("div.title").textContent;
+          return instName;
+        }
+      });
+      return instName;
+    }
+
+    /**
+     * Get quantity of bags to take
+     * @param e
+     * @return {string}
+     */
+    getQuantityOfBags(e) {
+      return this.$form.querySelector("#step2").querySelector("input").value;
+    }
+
+    /**
+     * Get address information
+     * @param e
+     * @return {*[]}
+     */
+    getAddress(e) {
+      const newArr = []
+      const inputs = this.$form.querySelector("#step4").querySelectorAll("input");
+      inputs.forEach(element => {
+        newArr.push(element.value);
+      });
+      const text = this.$form.querySelector("#step4").querySelector("textarea").value;
+      if(text === "") {
+        newArr.push("Brak uwag")
+      }
+      else {
+        newArr.push(text);
+      }
+      return newArr;
+    }
+
+    /**
+     * Update summary info
+     * @param e
+     * @param institutionName
+     * @param bagsQuantity
+     * @param address
+     */
+    updateSummary(e, institutionName, bagsQuantity, address) {
+      const firstPart = this.$form.querySelector("#step5").querySelector("div.form-section").querySelectorAll("li");
+      firstPart[0].querySelector("span.summary--text").innerHTML = bagsQuantity + " worki ubrań w dobrym stanie dla dzieci";
+      firstPart[1].querySelector("span.summary--text").innerHTML = "Dla " + institutionName;
+      let iter = 0;
+      this.$form.querySelector("#step5").querySelectorAll("div.form-section")[1].querySelectorAll("li").forEach(element => {
+        element.innerText = address[iter];
+        iter++;
+      });
+    }
+
+    validation(step) {
+      if (step === 1) {
+        return this.validateStep1();
+      }
+      else if (step === 2) {
+        return this.validateStep2();
+      }
+      else if (step === 3) {
+        return this.validateStep3();
+      }
+      else if (step === 4) {
+        return this.validateStep4();
+      }
+    }
+
+    validateStep1() {
+      const categoriesCheckboxes = this.$form.querySelector("#step1").querySelectorAll("div.form-group--checkbox");
+      let countCheckedCheckbox = 0
+      categoriesCheckboxes.forEach(element => {
+        if (element.querySelector("input").checked){
+          countCheckedCheckbox++;
+        }
+      });
+      return countCheckedCheckbox !== 0;
+    }
+
+    validateStep2() {
+      const bags = parseInt(this.$form.querySelector("#step2").querySelector("input").value);
+      return bags !== 0 && !(isNaN(bags));
+    }
+
+    validateStep3() {
+      let instName = ''
+      this.$form.querySelectorAll("#step3 div.form-group--checkbox").forEach(element => {
+        if(element.querySelector("input").checked) {
+          instName = element.querySelector("div.title").textContent;
+          return instName;
+        }
+      });
+      return instName !== '';
+    }
+
+    validateStep4() {
+      let result = true;
+      this.$form.querySelector("#step4").querySelectorAll("input").forEach(element => {
+        if (element.value === "")  {
+          result = false;
+        }
+      });
+      return result
+    }
+
   }
   const form = document.querySelector(".form--steps");
   if (form !== null) {
