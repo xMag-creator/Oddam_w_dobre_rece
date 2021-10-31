@@ -43,7 +43,7 @@ class LandingPageView(View):
             'organizations': organizations_list,
             'local_collections': local_collections_list,
             'logged': user.is_authenticated,
-            'superuser': user.is_superuser,
+            'staff': user.is_staff,
             'header_class': 'header--main-page',
 
         }
@@ -64,16 +64,13 @@ class AddDonationView(LoginRequiredMixin, View):
         institutions = Institution.objects.all().order_by('pk')
 
         user = request.user
-        logged = False
-        if user.is_authenticated:
-            logged = True
 
         context = {
             'form': 'form',
             'contact_form': contact_form,
             'copyright_year': 2018,
             'logged': user.is_authenticated,
-            'superuser': user.is_superuser,
+            'staff': user.is_staff,
             'header_class': 'header--form-page',
             'categories': categories,
             'institutions': institutions,
@@ -232,3 +229,24 @@ class ConfirmationView(View):
 
         }
         return render(request, self.template_name, context)
+
+
+class UserProfilView(LoginRequiredMixin, View):
+    contact_form = ContactForm
+    template_name = 'give_7_hands_templates/user_profil.html'
+
+    def get(self, request, *args, **kwargs):
+        contact_form = self.contact_form
+        user = request.user
+        user_donations = Donation.objects.filter(user_id=user.pk)
+        context = {
+            'contact_form': contact_form,
+            'copyright_year': 2018,
+            'logged': user.is_authenticated,
+            'staff': user.is_staff,
+            'user': user,
+            'user_donations': user_donations,
+
+        }
+        return render(request, self.template_name, context)
+

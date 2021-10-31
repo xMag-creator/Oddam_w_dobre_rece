@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <p>Imię: {{ user.first_name }}</p>
+    <p>Nazwisko: {{ user.last_name }}</p>
+    <p>E-mail: {{ user.email }}</p>
+    <table>
+    <tr>
+        <th>Bags</th>
+        <th>Institution</th>
+        <th>Categories</th>
+        <th>Taken date</th>
+    </tr>
+    {% for donation in user_donations %}
+        <tr>
+            <td>{{ donation.quantity }}</td>
+            <td>{{ donation.institution }}</td>
+            <td>
+                <ul>
+                {% for category in donation.categories.all %}
+                    <li>{{ category }}</li>
+                {% endfor %}
+                </ul>
+            </td>
+            <td>{{ donation.pick_up_date }} {{ donation.pick_up_time }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endblock %}
