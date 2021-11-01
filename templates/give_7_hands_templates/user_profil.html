@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
+{% block middle %}
     <p>Imię: {{ user.first_name }}</p>
     <p>Nazwisko: {{ user.last_name }}</p>
     <p>E-mail: {{ user.email }}</p>
@@ -11,20 +11,44 @@
         <th>Institution</th>
         <th>Categories</th>
         <th>Taken date</th>
+        <th>Status</th>
+        <th>Zmień status</th>
     </tr>
-    {% for donation in user_donations %}
-        <tr>
-            <td>{{ donation.quantity }}</td>
-            <td>{{ donation.institution }}</td>
-            <td>
-                <ul>
-                {% for category in donation.categories.all %}
-                    <li>{{ category }}</li>
-                {% endfor %}
-                </ul>
-            </td>
-            <td>{{ donation.pick_up_date }} {{ donation.pick_up_time }}</td>
-        </tr>
-    {% endfor %}
+    {% if active_user_donations %}
+        {% for donation in active_user_donations %}
+            <tr>
+                <td>{{ donation.quantity }}</td>
+                <td>{{ donation.institution }}</td>
+                <td>
+                    <ul>
+                    {% for category in donation.categories.all %}
+                        <li>{{ category }}</li>
+                    {% endfor %}
+                    </ul>
+                </td>
+                <td>{{ donation.pick_up_date }} {{ donation.pick_up_time }}</td>
+                <td>{% if donation.is_taken == False %}Nie zabrano{% endif %}</td>
+                <td><a href="{% url 'change_donation_status' pk=donation.pk %}">Zmień</a></td>
+            </tr>
+        {% endfor %}
+    {% endif %}
+    {% if inactive_user_donations %}
+        {% for donation in inactive_user_donations %}
+            <tr>
+                <td>{{ donation.quantity }}</td>
+                <td>{{ donation.institution }}</td>
+                <td>
+                    <ul>
+                    {% for category in donation.categories.all %}
+                        <li>{{ category }}</li>
+                    {% endfor %}
+                    </ul>
+                </td>
+                <td>{{ donation.pick_up_date }} {{ donation.pick_up_time }}</td>
+                <td>{% if donation.is_taken %}Zabrano{% endif %}</td>
+                <td><a href="{% url 'change_donation_status' pk=donation.pk %}">Zmień</a></td>
+            </tr>
+        {% endfor %}
+    {% endif %}
     </table>
 {% endblock %}

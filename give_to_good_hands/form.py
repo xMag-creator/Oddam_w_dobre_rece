@@ -36,3 +36,18 @@ class RegisterForm(forms.Form):
                             validators=[EmailValidator(message='Błędny e-mail.', allowlist=['example.net'])])
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
     repeat_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
+
+
+class EditUserForm(forms.Form):
+    name = forms.CharField(label='Imię', widget=forms.TextInput())
+    surname = forms.CharField(label='Nazwisko', widget=forms.TextInput())
+    email = forms.CharField(label='Email', widget=forms.EmailInput(),
+                            validators=[EmailValidator(message='Błędny e-mail.', allowlist=['example.net'])])
+    password = forms.CharField(label='Hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
+
+
+class NewPasswordForm(forms.Form):
+    password = forms.CharField(label='Hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
+    new_password = forms.CharField(label='Hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Nowe hasło'}))
+    repeat_new_password = forms.CharField(label='Hasło',
+                                          widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz nowe hasło'}))

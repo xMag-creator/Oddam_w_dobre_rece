@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block middle %}
+    <section class="login-page">
+      <h2>Zmień dane konta</h2>
+      <form method="post">
+          {% csrf_token %}
+        <div class="form-group">
+            {{ form.name.errors }}
+          {{ form.name }}
+        </div>
+         <div class="form-group">
+             {{ form.surname.errors }}
+          {{ form.surname }}
+        </div>
+        <div class="form-group">
+            {{ form.email.errors }}
+          {{ form.email }}
+        </div>
+        <div class="form-group">
+            {{ form.password.errors }}
+          {{ form.password }}
+        </div>
+          {% if message %}
+              <span>Podaj poprawne hasło.</span>
+          {% endif %}
+
+        <div class="form-group form-group--buttons">
+          <button class="btn" type="submit" name="edit_data">Zmień dane</button>
+        </div>
+      </form>
+        <h2>Zmień hasło</h2>
+        <form method="post">
+
+            {% csrf_token %}
+            <div class="form-group">
+                {{ password_form.password.errors }}
+                {{ password_form.password }}
+            </div>
+            <div class="form-group">
+                {{ password_form.new_password.errors }}
+                {{ password_form.new_password }}
+            </div>
+            <div class="form-group">
+                {{ password_form.repeat_new_password.errors }}
+                {{ password_form.repeat_new_password }}
+            </div>
+            {% if message_password %}
+                <span>Podaj poprawne hasło.</span>
+            {% endif %}
+            <div class="form-group form-group--buttons">
+                <button class="btn" type="submit" name="new_password_data">Zmień hasło</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

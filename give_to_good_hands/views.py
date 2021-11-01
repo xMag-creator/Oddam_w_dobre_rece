@@ -5,7 +5,7 @@ from django.views import View
 from django.db.models import Sum
 from django.contrib.auth.models import User
 from give_to_good_hands.models import Institution, Donation, Category
-from give_to_good_hands.form import ContactForm, LoginForm, RegisterForm
+from give_to_good_hands.form import ContactForm, LoginForm, RegisterForm, EditUserForm, NewPasswordForm
 
 
 # Create your views here.
@@ -238,15 +238,126 @@ class UserProfilView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         contact_form = self.contact_form
         user = request.user
-        user_donations = Donation.objects.filter(user_id=user.pk)
+        active_user_donations = Donation.objects.filter(user_id=user.pk, is_taken=False)
+        inactive_user_donations = Donation.objects.filter(user_id=user.pk, is_taken=True)
         context = {
             'contact_form': contact_form,
             'copyright_year': 2018,
             'logged': user.is_authenticated,
             'staff': user.is_staff,
             'user': user,
-            'user_donations': user_donations,
+            'active_user_donations': active_user_donations,
+            'inactive_user_donations': inactive_user_donations,
 
         }
         return render(request, self.template_name, context)
+
+
+class ChangeDonationStatusView(LoginRequiredMixin, View):
+    contact_form = ContactForm
+    template_name = 'give_7_hands_templates/change_donation_status.html'
+
+    def get(self, request, *args, **kwargs):
+        donation_pk = kwargs.get('pk')
+        donation = Donation.objects.get(pk=donation_pk)
+
+        if donation.is_taken:
+            donation.is_taken = False
+        else:
+            donation.is_taken = True
+
+        donation.save()
+
+        return redirect('/user_profil/')
+
+
+class EditUserView(LoginRequiredMixin, View):
+    form = EditUserForm
+    password_form = NewPasswordForm
+    contact_form = ContactForm
+    template_name = 'give_7_hands_templates/edit_user.html'
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        form = self.form(initial={'name': user.first_name,
+                                  'surname': user.last_name,
+                                  'email': user.email})
+        contact_form = self.contact_form
+        password_form = self.password_form
+
+        context = {
+            'form': form,
+            'contact_form': contact_form,
+            'copyright_year': 2018,
+            'logged': user.is_authenticated,
+            'staff': user.is_staff,
+            'user': user,
+            'password_form': password_form,
+
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        contact_form = self.contact_form
+        password_form = self.password_form
+        form = self.form
+        if 'edit_data' in request.POST:
+            form = self.form(request.POST)
+            if form.is_valid():
+                name = form.cleaned_data.get('name')
+                surname = form.cleaned_data.get('surname')
+                email = form.cleaned_data.get('email')
+                password = form.cleaned_data.get('password')
+
+                if authenticate(username=email, password=password):
+                    edit_user = User.objects.get(username=email)
+                    edit_user.first_name = name
+                    edit_user.last_name = surname
+                    edit_user.email = email
+                    edit_user.username = email
+                    edit_user.save()
+
+                    return redirect('/')
+                else:
+                    context = {
+                        'form': form,
+                        'contact_form': contact_form,
+                        'copyright_year': 2018,
+                        'logged': user.is_authenticated,
+                        'staff': user.is_staff,
+                        'user': user,
+                        'message': True,
+                        'password_form': password_form,
+
+                    }
+                    return render(request, self.template_name, context)
+
+        elif 'new_password_data' in request.POST:
+            password_form = self.password_form(request.POST)
+            if password_form.is_valid():
+                password = password_form.cleaned_data.get('password')
+                new_password = password_form.cleaned_data.get('new_password')
+                repeat_new_password = password_form.cleaned_data.get('repeat_new_password')
+
+                if authenticate(username=user.email, password=password):
+                    edit_user = User.objects.get(username=user.email)
+                    edit_user.set_password(new_password)
+                    edit_user.save()
+
+                    return redirect('/')
+                else:
+                    context = {
+                        'form': form,
+                        'contact_form': contact_form,
+                        'copyright_year': 2018,
+                        'logged': user.is_authenticated,
+                        'staff': user.is_staff,
+                        'user': user,
+                        'message_password': True,
+                        'password_form': password_form,
+
+                    }
+                    return render(request, self.template_name, context)
+
 
