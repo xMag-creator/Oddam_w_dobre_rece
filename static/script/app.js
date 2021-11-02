@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     init() {
       this.events();
+      this.setInstitutions();
     }
 
     events() {
@@ -62,8 +63,63 @@ document.addEventListener("DOMContentLoaded", function() {
     changePage(e) {
       e.preventDefault();
       const page = e.target.dataset.page;
+      const institutions = e.target.parentElement.parentElement.previousElementSibling.querySelectorAll("li");
+      institutions.forEach((element) => element.style.display='none');  // hide all records current list
+      this.show5records(page, institutions);  // show five records
+      e.target.parentElement.parentElement.querySelectorAll("a").forEach(element => element.classList.remove("active"));
+      e.target.classList.add("active");
+    }
 
-      console.log(page);
+    /**
+     * Set first page for all institutions list
+     */
+    setInstitutions() {
+      this.$el.querySelectorAll("ul.help--slides-items").forEach(institution => {
+        const institutions = institution.querySelectorAll("li");
+        institutions.forEach((element) => element.style.display='none');
+        this.show5records(1, institutions);
+        this.createPaginationButtons(institutions);
+        institutions[0].parentElement.nextElementSibling.firstElementChild.querySelector("a").classList.add("active");
+      });
+    }
+
+    /**
+     * Show current records
+     * @param page
+     * @param recordList
+     */
+    show5records(page, recordList) {
+      let startPos = Number(page) * 5;
+      let repeats = 6;
+      if (startPos > recordList.length) {
+        repeats = 6 - (startPos - recordList.length);
+        startPos = recordList.length;
+      }
+      for (let i=1; i<repeats; i++) {
+        recordList[startPos - i].style.display='flex';
+      }
+    }
+
+    /**
+     * Create pagination button for each 5 institutions
+     * @param recordList
+     */
+    createPaginationButtons(recordList) {
+      const listLength = recordList.length;
+      let repeats = listLength / 5;
+      const pagination = recordList[0].parentElement.nextElementSibling;
+      for (let i=0; i<repeats; i++) {
+        const record = document.createElement("li");
+        const button = document.createElement("a");
+        button.classList.add("btn");
+        button.classList.add("btn--small");
+        button.classList.add("btn--without-border");
+        button.innerText = `${i+1}`;
+        button.dataset.page = `${i+1}`;
+        record.appendChild(button);
+        pagination.appendChild(record);
+      }
+
     }
   }
   const helpSection = document.querySelector(".help");
