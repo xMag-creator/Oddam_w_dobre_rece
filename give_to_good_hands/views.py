@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from give_to_good_hands.models import Institution, Donation, Category
 from give_to_good_hands.form import ContactForm, LoginForm, RegisterForm, EditUserForm, NewPasswordForm
 
+from re import compile, match
+
 
 # Create your views here.
 class LandingPageView(View):
@@ -79,6 +81,8 @@ class AddDonationView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
+        contact_form = self.contact_form
+
         user = request.user
         quantity = request.POST.get('bags')
         categories = request.POST.getlist('categories')
@@ -91,10 +95,13 @@ class AddDonationView(LoginRequiredMixin, View):
         pick_up_time = request.POST.get('time')
         pick_up_comment = request.POST.get('more_info')
 
+        all_ok = True
+        quantity_nok = False
         try:
             quantity_of_bags = int(quantity)
         except ValueError:
-            raise "Wrong value"
+            all_ok = False
+            quantity_nok = True
 
         all_categories = Category.objects.all()
         my_institution = Institution.objects.get(pk=institution)
@@ -105,30 +112,88 @@ class AddDonationView(LoginRequiredMixin, View):
                 if category_name == category.name:
                     category_to_add.append(category)
 
-        new_donation = Donation.objects.create(user_id=user.pk,
-                                               quantity=quantity_of_bags,
-                                               institution=my_institution,
-                                               address=address,
-                                               phone_number=phone_number,
-                                               city=city,
-                                               zip_code=zip_code,
-                                               pick_up_date=pick_up_date,
-                                               pick_up_time=pick_up_time,
-                                               pick_up_comment=pick_up_comment)
-        for category in category_to_add:
-            new_donation.categories.add(category)
-        new_donation.save()
+        institution_pattern = compile('(\\d)+')
+        address_pattern = compile('^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+\\s(\\d)+')
+        phone_pattern = compile('(\\d){3}\\s(\\d){3}\\s(\\d){3} | \\((\\d){2}\\)\\s(\\d){3}\\s(\\d){2}\\s(\\d){2}')
+        city_pattern = compile('^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+')
+        zip_code_pattern = compile('(\\d){2}-(\\d){3}')
+        text_pattern = compile('^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż,.:\\s-])+')
 
-        # print(f'{quantity}, {type(quantity)}')
-        # print(f'{categories}, {type(categories)}')
-        # print(f'{institution}, {type(institution)}')
-        # print(f'{address}, {type(address)}')
-        # print(f'{phone_number}, {type(phone_number)}')
-        # print(f'{city}, {type(city)}')
-        # print(f'{zip_code}, {type(zip_code)}')
-        # print(f'{pick_up_date}, {type(pick_up_date)}')
-        # print(f'{pick_up_time}, {type(pick_up_time)}')
-        # print(f'{pick_up_comment}, {type(pick_up_comment)}')
+        address_nok = False
+        phone_nok = False
+        city_nok = False
+        zip_code_nok = False
+        text_nok = False
+
+        if not institution_pattern.match(institution):
+            all_ok = False
+
+        if not address_pattern.match(address):
+            all_ok = False
+            address_nok = True
+
+        if not phone_pattern.match(phone_number):
+            all_ok = False
+            phone_nok = True
+
+        if not city_pattern.match(city):
+            all_ok = False
+            city_nok = True
+
+        if not zip_code_pattern.match(zip_code):
+            all_ok = False
+            zip_code_nok = True
+
+        if not text_pattern.match(pick_up_comment):
+            all_ok = False
+            text_nok = True
+
+        if all_ok:
+            new_donation = Donation.objects.create(user_id=user.pk,
+                                                   quantity=quantity_of_bags,
+                                                   institution=my_institution,
+                                                   address=address,
+                                                   phone_number=phone_number,
+                                                   city=city,
+                                                   zip_code=zip_code,
+                                                   pick_up_date=pick_up_date,
+                                                   pick_up_time=pick_up_time,
+                                                   pick_up_comment=pick_up_comment)
+            for category in category_to_add:
+                new_donation.categories.add(category)
+            new_donation.save()
+        else:
+            all_categories = Category.objects.all()
+            institutions = Institution.objects.all().order_by('pk')
+            context = {
+                'form': 'form',
+                'contact_form': contact_form,
+                'copyright_year': 2018,
+                'logged': user.is_authenticated,
+                'staff': user.is_staff,
+                'header_class': 'header--form-page',
+                'categories': all_categories,
+                'institutions': institutions,
+                'all_ok': False,
+                'quantity_nok': quantity_nok,
+                'address_nok': address_nok,
+                'phone_nok': phone_nok,
+                'city_nok': city_nok,
+                'zip_code_nok': zip_code_nok,
+                'text_nok': text_nok,
+                'set_quantity': quantity,
+                'set_categories': categories,
+                'set_institution': institution,
+                'set_address': address,
+                'set_phone_number': phone_number,
+                'set_city': city,
+                'set_zip_code': zip_code,
+                'set_pick_up_date': pick_up_date,
+                'set_pick_up_time': pick_up_time,
+                'set_pick_up_comment': pick_up_comment,
+
+            }
+            return render(request, self.template_name, context)
 
         return redirect('confirmation')
 
