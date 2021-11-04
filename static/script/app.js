@@ -455,12 +455,21 @@ document.addEventListener("DOMContentLoaded", function() {
           countCheckedCheckbox++;
         }
       });
-      return countCheckedCheckbox !== 0;
+      const result = countCheckedCheckbox !== 0;
+      if (result === false) {
+        this.showErrorMessage("#step1", "Nie wybrano żadnej kategorii!")
+      }
+      return result;
     }
 
     validateStep2() {
-      const bags = parseInt(this.$form.querySelector("#step2").querySelector("input").value);
-      return bags !== 0 && !(isNaN(bags));
+      const bags = this.$form.querySelector("#step2").querySelector("input");
+      const result = Number(bags.value) !== 0 && !(isNaN(Number(bags.value)));
+      if (result === false) {
+        bags.style.borderColor = "red"
+        this.showErrorMessage("#step2", "Błędne dane o ilości worków!")
+      }
+      return result;
     }
 
     validateStep3() {
@@ -471,17 +480,34 @@ document.addEventListener("DOMContentLoaded", function() {
           return instName;
         }
       });
-      return instName !== '';
+      const result = instName !== '';
+      if (result === false) {
+        this.showErrorMessage("#step3", "Nie wybrano żadnej instytucji!")
+      }
+      return result;
     }
 
     validateStep4() {
       let result = true;
       this.$form.querySelector("#step4").querySelectorAll("input").forEach(element => {
         if (element.value === "")  {
+          element.style.borderColor = "red";
           result = false;
         }
       });
+      if (result === false) {
+        this.showErrorMessage("#step4", "Błędne dane!");
+      }
       return result
+    }
+
+    showErrorMessage(id, text) {
+      const message = document.createElement("p");
+        message.innerText = text;
+        const messageBox = document.createElement("div");
+        messageBox.classList.add("form--error-message");
+        messageBox.appendChild(message);
+        this.$form.querySelector(id).appendChild(messageBox);
     }
 
   }
