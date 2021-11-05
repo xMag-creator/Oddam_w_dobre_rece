@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block head_class %}
+class="header--form-page"
+{% endblock %}
 {% block additional_head %}
     <div class="slogan container container--90">
         <div class="slogan--item">
@@ -52,8 +55,11 @@
       </div>
 
       <div class="form--steps-container">
-        <div class="form--steps-counter">Krok <span>1</span>/5</div>
 
+        {% if all_ok is False %}
+            <div class="form--error-message"><p>Przesłano błędne dane!</p></div>
+        {% endif %}
+        <div class="form--steps-counter">Krok <span>1</span>/5</div>
         <form action="" method="post">
             {% csrf_token %}
           <!-- STEP 1: class .active is switching steps -->
@@ -67,11 +73,10 @@
                       type="checkbox"
                       name="categories"
                       value="{{ category }}"
+                      {% if category.name in set_categories %}checked="checked"{% endif %}
                     />
                     <span class="checkbox"></span>
-                    <span class="description"
-                      >{{ category }}</span
-                    >
+                    <span class="description">{{ category }}</span>
                   </label>
                 </div>
             {% endfor %}
@@ -88,7 +93,7 @@
             <div class="form-group form-group--inline">
               <label>
                 Liczba 60l worków:
-                <input type="number" name="bags" step="1" min="1" />
+                <input {% if quantity_nok is True %}style="border-color: red"{% endif %} type="number" name="bags" step="1" min="1" value="{{ set_quantity }}"/>
               </label>
             </div>
 
@@ -106,7 +111,7 @@
             {% for institution in institutions %}
                 <div class="form-group form-group--checkbox">
                   <label>
-                    <input type="radio" name="organization" value="{{ institution.pk }}" />
+                    <input type="radio" name="organization" value="{{ institution.pk }}" {% if set_intitution == institution.pk %}checked="checked"{% endif %} />
                     <span class="checkbox radio"></span>
                     <span class="description">
                       <div class="title">{{ institution }}</div>
@@ -138,22 +143,22 @@
               <div class="form-section--column">
                 <h4>Adres odbioru</h4>
                 <div class="form-group form-group--inline">
-                  <label> Ulica <input type="text" name="address" /> </label>
+                  <label> Ulica <input {% if address_nok is True %}style="border-color: red"{% endif %} type="text" name="address" value="{{ set_address }}"/> </label>
                 </div>
 
                 <div class="form-group form-group--inline">
-                  <label> Miasto <input type="text" name="city" /> </label>
+                  <label> Miasto <input {% if city_nok is True %}style="border-color: red"{% endif %} type="text" name="city" value="{{ set_city }}"/> </label>
                 </div>
 
                 <div class="form-group form-group--inline">
                   <label>
-                    Kod pocztowy <input type="text" name="postcode" />
+                    Kod pocztowy <input {% if zip_code_nok is True %}style="border-color: red"{% endif %} type="text" name="postcode" value="{{ set_zip_code }}"/>
                   </label>
                 </div>
 
                 <div class="form-group form-group--inline">
                   <label>
-                    Numer telefonu <input type="phone" name="phone" />
+                    Numer telefonu <input {% if phone_nok is True %}style="border-color: red"{% endif %} type="phone" name="phone" value="{{ set_phone_number }}"/>
                   </label>
                 </div>
               </div>
@@ -161,17 +166,17 @@
               <div class="form-section--column">
                 <h4>Termin odbioru</h4>
                 <div class="form-group form-group--inline">
-                  <label> Data <input type="date" name="date" /> </label>
+                  <label> Data <input type="date" name="date" value="{{ set_pick_up_date }}"/> </label>
                 </div>
 
                 <div class="form-group form-group--inline">
-                  <label> Godzina <input type="time" name="time" /> </label>
+                  <label> Godzina <input type="time" name="time" value="{{ set_pick_up_time }}"/> </label>
                 </div>
 
                 <div class="form-group form-group--inline">
                   <label>
                     Uwagi dla kuriera
-                    <textarea name="more_info" rows="5"></textarea>
+                    <textarea {% if text_nok is True %}style="border-color: red"{% endif %} name="more_info" rows="5">{{ set_pick_up_comment }}</textarea>
                   </label>
                 </div>
               </div>
@@ -234,5 +239,9 @@
         </form>
       </div>
     </section>
+{% endblock %}
+
+{% block copyright %}
+ <span class="bottom-line--copy">Copyright &copy; 2018</span>
 {% endblock %}
 

@@ -9,7 +9,11 @@
     <link rel="stylesheet" type="text/css" href="{% static 'styles/style.css' %}" />
 </head>
 <body>
-    <header class="{{ header_class }}">
+    <header
+            {% block head_class %}
+
+            {% endblock %}
+    >
         <nav class="container container--70">
             <ul class="nav--actions">
                 {% if logged %}
@@ -64,7 +68,9 @@
         </form>
       </div>
       <div class="bottom-line">
-        <span class="bottom-line--copy">Copyright &copy; {{ copyright_year }}</span>
+          {% block copyright %}
+
+          {% endblock %}
         <div class="bottom-line--icons">
           <a href="#" class="btn btn--small"><img src="{% static 'images/icon-facebook.svg' %}"/></a>
           <a href="#" class="btn btn--small"><img src="{% static 'images/icon-instagram.svg' %}"/></a>

@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     init() {
       this.events();
+      this.setInstitutions();
     }
 
     events() {
@@ -62,8 +63,63 @@ document.addEventListener("DOMContentLoaded", function() {
     changePage(e) {
       e.preventDefault();
       const page = e.target.dataset.page;
+      const institutions = e.target.parentElement.parentElement.previousElementSibling.querySelectorAll("li");
+      institutions.forEach((element) => element.style.display='none');  // hide all records current list
+      this.show5records(page, institutions);  // show five records
+      e.target.parentElement.parentElement.querySelectorAll("a").forEach(element => element.classList.remove("active"));
+      e.target.classList.add("active");
+    }
 
-      console.log(page);
+    /**
+     * Set first page for all institutions list
+     */
+    setInstitutions() {
+      this.$el.querySelectorAll("ul.help--slides-items").forEach(institution => {
+        const institutions = institution.querySelectorAll("li");
+        institutions.forEach((element) => element.style.display='none');
+        this.show5records(1, institutions);
+        this.createPaginationButtons(institutions);
+        institutions[0].parentElement.nextElementSibling.firstElementChild.querySelector("a").classList.add("active");
+      });
+    }
+
+    /**
+     * Show current records
+     * @param page
+     * @param recordList
+     */
+    show5records(page, recordList) {
+      let startPos = Number(page) * 5;
+      let repeats = 6;
+      if (startPos > recordList.length) {
+        repeats = 6 - (startPos - recordList.length);
+        startPos = recordList.length;
+      }
+      for (let i=1; i<repeats; i++) {
+        recordList[startPos - i].style.display='flex';
+      }
+    }
+
+    /**
+     * Create pagination button for each 5 institutions
+     * @param recordList
+     */
+    createPaginationButtons(recordList) {
+      const listLength = recordList.length;
+      let repeats = listLength / 5;
+      const pagination = recordList[0].parentElement.nextElementSibling;
+      for (let i=0; i<repeats; i++) {
+        const record = document.createElement("li");
+        const button = document.createElement("a");
+        button.classList.add("btn");
+        button.classList.add("btn--small");
+        button.classList.add("btn--without-border");
+        button.innerText = `${i+1}`;
+        button.dataset.page = `${i+1}`;
+        record.appendChild(button);
+        pagination.appendChild(record);
+      }
+
     }
   }
   const helpSection = document.querySelector(".help");
@@ -399,12 +455,21 @@ document.addEventListener("DOMContentLoaded", function() {
           countCheckedCheckbox++;
         }
       });
-      return countCheckedCheckbox !== 0;
+      const result = countCheckedCheckbox !== 0;
+      if (result === false) {
+        this.showErrorMessage("#step1", "Nie wybrano żadnej kategorii!")
+      }
+      return result;
     }
 
     validateStep2() {
-      const bags = parseInt(this.$form.querySelector("#step2").querySelector("input").value);
-      return bags !== 0 && !(isNaN(bags));
+      const bags = this.$form.querySelector("#step2").querySelector("input");
+      const result = Number(bags.value) !== 0 && !(isNaN(Number(bags.value)));
+      if (result === false) {
+        bags.style.borderColor = "red"
+        this.showErrorMessage("#step2", "Błędne dane o ilości worków!")
+      }
+      return result;
     }
 
     validateStep3() {
@@ -415,17 +480,34 @@ document.addEventListener("DOMContentLoaded", function() {
           return instName;
         }
       });
-      return instName !== '';
+      const result = instName !== '';
+      if (result === false) {
+        this.showErrorMessage("#step3", "Nie wybrano żadnej instytucji!")
+      }
+      return result;
     }
 
     validateStep4() {
       let result = true;
       this.$form.querySelector("#step4").querySelectorAll("input").forEach(element => {
         if (element.value === "")  {
+          element.style.borderColor = "red";
           result = false;
         }
       });
+      if (result === false) {
+        this.showErrorMessage("#step4", "Błędne dane!");
+      }
       return result
+    }
+
+    showErrorMessage(id, text) {
+      const message = document.createElement("p");
+        message.innerText = text;
+        const messageBox = document.createElement("div");
+        messageBox.classList.add("form--error-message");
+        messageBox.appendChild(message);
+        this.$form.querySelector(id).appendChild(messageBox);
     }
 
   }
