@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block head_class %}
+class="header--form-page"
+{% endblock %}
 {% block additional_head %}
     <div class="slogan container container--90">
         <div class="slogan--item">
@@ -236,5 +239,9 @@
         </form>
       </div>
     </section>
+{% endblock %}
+
+{% block copyright %}
+ <span class="bottom-line--copy">Copyright &copy; 2018</span>
 {% endblock %}
 

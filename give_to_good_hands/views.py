@@ -38,7 +38,6 @@ class LandingPageView(View):
 
         context = {
             'contact_form': form,
-            'copyright_year': 2019,
             'bags': bags,
             'institutions': institutions,
             'foundations': foundations_list,
@@ -46,7 +45,6 @@ class LandingPageView(View):
             'local_collections': local_collections_list,
             'logged': user.is_authenticated,
             'staff': user.is_staff,
-            'header_class': 'header--main-page',
 
         }
         return render(request, self.template_name, context)
@@ -70,10 +68,8 @@ class AddDonationView(LoginRequiredMixin, View):
         context = {
             'form': 'form',
             'contact_form': contact_form,
-            'copyright_year': 2018,
             'logged': user.is_authenticated,
             'staff': user.is_staff,
-            'header_class': 'header--form-page',
             'categories': categories,
             'institutions': institutions,
 
@@ -168,10 +164,8 @@ class AddDonationView(LoginRequiredMixin, View):
             context = {
                 'form': 'form',
                 'contact_form': contact_form,
-                'copyright_year': 2018,
                 'logged': user.is_authenticated,
                 'staff': user.is_staff,
-                'header_class': 'header--form-page',
                 'categories': all_categories,
                 'institutions': institutions,
                 'all_ok': False,
@@ -210,7 +204,6 @@ class LoginView(View):
         context = {
             'form': form,
             'contact_form': contact_form,
-            'copyright_year': 2018,
 
         }
         return render(request, self.template_name, context)
@@ -241,7 +234,6 @@ class RegisterView(View):
         context = {
             'form': form,
             'contact_form': contact_form,
-            'copyright_year': 2018,
 
         }
         return render(request, self.template_name, context)
@@ -307,7 +299,6 @@ class UserProfilView(LoginRequiredMixin, View):
         inactive_user_donations = Donation.objects.filter(user_id=user.pk, is_taken=True)
         context = {
             'contact_form': contact_form,
-            'copyright_year': 2018,
             'logged': user.is_authenticated,
             'staff': user.is_staff,
             'user': user,
@@ -353,7 +344,6 @@ class EditUserView(LoginRequiredMixin, View):
         context = {
             'form': form,
             'contact_form': contact_form,
-            'copyright_year': 2018,
             'logged': user.is_authenticated,
             'staff': user.is_staff,
             'user': user,
@@ -388,7 +378,6 @@ class EditUserView(LoginRequiredMixin, View):
                     context = {
                         'form': form,
                         'contact_form': contact_form,
-                        'copyright_year': 2018,
                         'logged': user.is_authenticated,
                         'staff': user.is_staff,
                         'user': user,
@@ -415,7 +404,6 @@ class EditUserView(LoginRequiredMixin, View):
                     context = {
                         'form': form,
                         'contact_form': contact_form,
-                        'copyright_year': 2018,
                         'logged': user.is_authenticated,
                         'staff': user.is_staff,
                         'user': user,
