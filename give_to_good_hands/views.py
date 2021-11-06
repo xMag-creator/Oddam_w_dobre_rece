@@ -386,6 +386,16 @@ class EditUserView(LoginRequiredMixin, View):
 
                     }
                     return render(request, self.template_name, context)
+            else:
+                context = {
+                    'form': form,
+                    'contact_form': contact_form,
+                    'logged': user.is_authenticated,
+                    'staff': user.is_staff,
+                    'user': user,
+                    'password_form': password_form,
+                }
+                return render(request, self.template_name, context)
 
         elif 'new_password_data' in request.POST:
             password_form = self.password_form(request.POST)
@@ -412,5 +422,14 @@ class EditUserView(LoginRequiredMixin, View):
 
                     }
                     return render(request, self.template_name, context)
-
+            else:
+                context = {
+                    'form': form,
+                    'contact_form': contact_form,
+                    'logged': user.is_authenticated,
+                    'staff': user.is_staff,
+                    'user': user,
+                    'password_form': password_form,
+                }
+                return render(request, self.template_name, context)
 

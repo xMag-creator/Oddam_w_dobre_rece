@@ -1,6 +1,40 @@
 from django import forms
 from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
 from give_to_good_hands.models import Institution, Category, Donation
+from re import compile, search
+
+
+def the_same_passwords(password_one, password_two):
+    if password_one != password_two:
+        raise ValidationError(f"Hasła nie są takie same.")
+
+
+def enough_length(password):
+    if len(password) <= 8:
+        raise ValidationError('Hasło jest za krótkie')
+
+
+def big_letters(password):
+    if sum(1 for char in password if char.isupper()) == 0:
+        raise ValidationError('Hasło musi zawierać duże litery.')
+
+
+def small_letters(password):
+    if sum(1 for char in password if char.islower()) == 0:
+        raise ValidationError('Hasło musi zawierać małe litery.')
+
+
+def numbers(password):
+    print(password)
+    if sum(1 for char in password if char.isdigit()) == 0:
+        raise ValidationError('Hasło musi zawierać cyfry.')
+
+
+def special_signs(password):
+    pattern = compile('[@_!#$%^&*()<>?/\|}{~:]')
+    if pattern.search(password) is None:
+        raise ValidationError('Hasło musi zawierać znaki specjalne.')
 
 
 class ContactForm(forms.Form):
@@ -34,8 +68,13 @@ class RegisterForm(forms.Form):
     surname = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
     email = forms.CharField(widget=forms.EmailInput(attrs={'placeholder': 'Email'}),
                             validators=[EmailValidator(message='Błędny e-mail.', allowlist=['example.net'])])
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}),
+                               validators=[enough_length, big_letters, small_letters, numbers, special_signs])
     repeat_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz hasło'}))
+
+    def clean(self):
+        cleaned_data = super(RegisterForm, self).clean()
+        the_same_passwords(cleaned_data.get('password'), cleaned_data.get('repeat_password'))
 
 
 class EditUserForm(forms.Form):
@@ -47,7 +86,13 @@ class EditUserForm(forms.Form):
 
 
 class NewPasswordForm(forms.Form):
-    password = forms.CharField(label='Hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
-    new_password = forms.CharField(label='Hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Nowe hasło'}))
+    password = forms.CharField(label='Hasło',
+                               widget=forms.PasswordInput(attrs={'placeholder': 'Hasło'}))
+    new_password = forms.CharField(label='Hasło', widget=forms.PasswordInput(attrs={'placeholder': 'Nowe hasło'}),
+                                   validators=[enough_length, big_letters, small_letters, numbers, special_signs])
     repeat_new_password = forms.CharField(label='Hasło',
                                           widget=forms.PasswordInput(attrs={'placeholder': 'Powtórz nowe hasło'}))
+
+    def clean(self):
+        cleaned_data = super(NewPasswordForm, self).clean()
+        the_same_passwords(cleaned_data.get('new_password'), cleaned_data.get('repeat_new_password'))
