@@ -2,7 +2,7 @@ from django import forms
 from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
 from give_to_good_hands.models import Institution, Category, Donation
-from re import compile, search
+from re import compile
 
 
 def the_same_passwords(password_one, password_two):

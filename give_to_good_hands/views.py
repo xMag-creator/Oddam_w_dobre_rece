@@ -91,6 +91,8 @@ class AddDonationView(LoginRequiredMixin, View):
         pick_up_time = request.POST.get('time')
         pick_up_comment = request.POST.get('more_info')
 
+        print(phone_number)
+
         all_ok = True
         quantity_nok = False
         try:
@@ -108,12 +110,12 @@ class AddDonationView(LoginRequiredMixin, View):
                 if category_name == category.name:
                     category_to_add.append(category)
 
-        institution_pattern = compile('(\\d)+')
-        address_pattern = compile('^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+\\s(\\d)+')
-        phone_pattern = compile('(\\d){3}\\s(\\d){3}\\s(\\d){3} | \\((\\d){2}\\)\\s(\\d){3}\\s(\\d){2}\\s(\\d){2}')
-        city_pattern = compile('^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+')
-        zip_code_pattern = compile('(\\d){2}-(\\d){3}')
-        text_pattern = compile('^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż,.:\\s-])+')
+        institution_pattern = compile(r'(\d)+')
+        address_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+\s(\d)+')
+        phone_one_pattern = compile(r"(\d){3}\s(\d){3}\s(\d){3}")
+        city_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+')
+        zip_code_pattern = compile(r'(\d){2}-(\d){3}')
+        text_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż,.:\s-])+')
 
         address_nok = False
         phone_nok = False
@@ -128,7 +130,7 @@ class AddDonationView(LoginRequiredMixin, View):
             all_ok = False
             address_nok = True
 
-        if not phone_pattern.match(phone_number):
+        if not phone_one_pattern.match(phone_number):
             all_ok = False
             phone_nok = True
 
@@ -140,7 +142,7 @@ class AddDonationView(LoginRequiredMixin, View):
             all_ok = False
             zip_code_nok = True
 
-        if not text_pattern.match(pick_up_comment):
+        if not text_pattern.match(pick_up_comment) and pick_up_comment != "":
             all_ok = False
             text_nok = True
 
@@ -432,4 +434,3 @@ class EditUserView(LoginRequiredMixin, View):
                     'password_form': password_form,
                 }
                 return render(request, self.template_name, context)
-
