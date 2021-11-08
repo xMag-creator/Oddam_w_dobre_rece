@@ -1,13 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from django.contrib.auth.admin import UserAdmin
 from give_to_good_hands.models import Institution
 
 admin.site.unregister(User)
 
 
 @admin.register(User)
-class CustomUserAdmin(admin.ModelAdmin):
+class UserAdmin(admin.ModelAdmin):
     user_fields = ['first_name', 'last_name', 'email', 'is_active']
     superuser_fields = ['is_staff', ]
 
@@ -17,7 +16,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         else:
             self.fields = self.user_fields
 
-        return super(CustomUserAdmin, self).get_form(request, obj, **kwargs)
+        return super(UserAdmin, self).get_form(request, obj, **kwargs)
 
     def delete_queryset(self, request, queryset):
         user = request.user
@@ -26,7 +25,7 @@ class CustomUserAdmin(admin.ModelAdmin):
             admins_to_delete = queryset.filter(is_staff=True, is_superuser=False)
             print(len(admins_to_delete))
             if (len(admins) - len(admins_to_delete)) > 1:
-                super(CustomUserAdmin, self).delete_queryset(request, queryset)
+                super(UserAdmin, self).delete_queryset(request, queryset)
             else:
                 print("it must be minimum 1 admin")
         else:
