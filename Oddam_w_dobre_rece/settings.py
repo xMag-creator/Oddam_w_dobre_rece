@@ -143,7 +143,7 @@ try:
     from Oddam_w_dobre_rece.local_settings import EMAIL_HOST_SETTING, EMAIL_HOST_USER_SETTING, \
         EMAIL_HOST_PASSWORD_SETTING, EMAIL_PORT_SETTING
 except ModuleNotFoundError:
-    print("Brak konfiguracji bazy danych w pliku local_settings.py!")
+    print("Brak konfiguracji email w pliku local_settings.py!")
     print("Uzupełnij dane i spróbuj ponownie!")
     exit(0)
 
