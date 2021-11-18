@@ -134,3 +134,22 @@ STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static_cdn')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
+
+
+# Email settings
+# https://docs.djangoproject.com/en/3.2/topics/email/
+
+try:
+    from Oddam_w_dobre_rece.local_settings import EMAIL_HOST_SETTING, EMAIL_HOST_USER_SETTING, \
+        EMAIL_HOST_PASSWORD_SETTING, EMAIL_PORT_SETTING
+except ModuleNotFoundError:
+    print("Brak konfiguracji bazy danych w pliku local_settings.py!")
+    print("Uzupełnij dane i spróbuj ponownie!")
+    exit(0)
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = EMAIL_HOST_SETTING
+EMAIL_HOST_USER = EMAIL_HOST_USER_SETTING
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD_SETTING
+EMAIL_PORT = EMAIL_PORT_SETTING
