@@ -36,6 +36,5 @@ class UserAdmin(admin.ModelAdmin):
 class InstitutionAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'type', 'categories_list')
 
-
     def categories_list(self, obj):
         return ", ".join([str(category) for category in obj.categories.all()])
