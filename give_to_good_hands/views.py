@@ -305,7 +305,9 @@ class RegisterView(View):
                                          first_name=name,
                                          last_name=surname,
                                          email=email,
-                                         password=password)
+                                         password=password,
+                                         is_active=False,
+                                         )
                 return redirect('/login/')
             else:
                 context = {
