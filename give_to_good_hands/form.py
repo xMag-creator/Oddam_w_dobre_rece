@@ -40,6 +40,7 @@ def special_signs(password):
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=128, widget=forms.TextInput(attrs={'placeholder': 'Imię'}))
     surname = forms.CharField(max_length=128, widget=forms.TextInput(attrs={'placeholder': 'Nazwisko'}))
+    # message = forms.CharField(widget=forms.Textarea)
     message = forms.CharField(widget=forms.Textarea(attrs={'placeholder': 'Wiadomość', 'rows': 1}))
 
 

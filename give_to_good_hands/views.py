@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import EmailMessage
 from django.shortcuts import render, redirect
 from django.views import View
 from django.db.models import Sum
@@ -10,14 +11,29 @@ from give_to_good_hands.form import ContactForm, LoginForm, RegisterForm, EditUs
 from re import compile, match
 
 
+def contact_form_processing(contact_form):
+    # Send message to all admins
+    if contact_form.is_valid():
+        first_name = contact_form.cleaned_data.get('name')
+        last_name = contact_form.cleaned_data.get('surname')
+        message = contact_form.cleaned_data.get('message')
+
+        admins = User.objects.filter(is_staff=True)
+        emails = [admin.email for admin in admins]
+
+        email = EmailMessage(f'Wiadomość od {first_name} {last_name}.', message, to=emails)
+        email.send()
+
+    return contact_form
+
+
 # Create your views here.
 class LandingPageView(View):
     # landing page view
-    form_class = ContactForm
+    contact_form = ContactForm
     template_name = 'give_7_hands_templates/index.html'
 
-    def get(self, request, *args, **kwargs):
-        form = self.form_class
+    def prepare_view(self, request, contact_form):
         bags = Donation.objects.all().aggregate(Sum('quantity'))
         bags = bags.get('quantity__sum')
         institutions = Institution.objects.all().count()
@@ -32,12 +48,9 @@ class LandingPageView(View):
         local_collections_list = Institution.objects.filter(type=2).order_by('pk')
 
         user = request.user
-        logged = False
-        if user.is_authenticated:
-            logged = True
 
         context = {
-            'contact_form': form,
+            'contact_form': contact_form,
             'bags': bags,
             'institutions': institutions,
             'foundations': foundations_list,
@@ -48,6 +61,15 @@ class LandingPageView(View):
 
         }
         return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        contact_form = self.contact_form
+        return self.prepare_view(request, contact_form)
+
+    def post(self, request, *args, **kwargs):
+        contact_form = self.contact_form(request.POST)
+        contact_form = contact_form_processing(contact_form)
+        return self.prepare_view(request, contact_form)
 
 
 class AddDonationView(LoginRequiredMixin, View):
@@ -77,121 +99,139 @@ class AddDonationView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        contact_form = self.contact_form
+        if 'donation' in request.POST:
+            contact_form = self.contact_form
 
-        user = request.user
-        quantity = request.POST.get('bags')
-        categories = request.POST.getlist('categories')
-        institution = request.POST.get('organization')
-        address = request.POST.get('address')
-        phone_number = request.POST.get('phone')
-        city = request.POST.get('city')
-        zip_code = request.POST.get('postcode')
-        pick_up_date = request.POST.get('date')
-        pick_up_time = request.POST.get('time')
-        pick_up_comment = request.POST.get('more_info')
+            user = request.user
+            quantity = request.POST.get('bags')
+            categories = request.POST.getlist('categories')
+            institution = request.POST.get('organization')
+            address = request.POST.get('address')
+            phone_number = request.POST.get('phone')
+            city = request.POST.get('city')
+            zip_code = request.POST.get('postcode')
+            pick_up_date = request.POST.get('date')
+            pick_up_time = request.POST.get('time')
+            pick_up_comment = request.POST.get('more_info')
 
-        print(phone_number)
+            print(phone_number)
 
-        all_ok = True
-        quantity_nok = False
-        try:
-            quantity_of_bags = int(quantity)
-        except ValueError:
-            all_ok = False
-            quantity_nok = True
+            all_ok = True
+            quantity_nok = False
+            try:
+                quantity_of_bags = int(quantity)
+            except ValueError:
+                all_ok = False
+                quantity_nok = True
 
-        all_categories = Category.objects.all()
-        my_institution = Institution.objects.get(pk=institution)
-
-        category_to_add = []
-        for category_name in categories:
-            for category in all_categories:
-                if category_name == category.name:
-                    category_to_add.append(category)
-
-        institution_pattern = compile(r'(\d)+')
-        address_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+\s(\d)+')
-        phone_one_pattern = compile(r"(\d){3}\s(\d){3}\s(\d){3}")
-        city_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+')
-        zip_code_pattern = compile(r'(\d){2}-(\d){3}')
-        text_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż,.:\s-])+')
-
-        address_nok = False
-        phone_nok = False
-        city_nok = False
-        zip_code_nok = False
-        text_nok = False
-
-        if not institution_pattern.match(institution):
-            all_ok = False
-
-        if not address_pattern.match(address):
-            all_ok = False
-            address_nok = True
-
-        if not phone_one_pattern.match(phone_number):
-            all_ok = False
-            phone_nok = True
-
-        if not city_pattern.match(city):
-            all_ok = False
-            city_nok = True
-
-        if not zip_code_pattern.match(zip_code):
-            all_ok = False
-            zip_code_nok = True
-
-        if not text_pattern.match(pick_up_comment) and pick_up_comment != "":
-            all_ok = False
-            text_nok = True
-
-        if all_ok:
-            new_donation = Donation.objects.create(user_id=user.pk,
-                                                   quantity=quantity_of_bags,
-                                                   institution=my_institution,
-                                                   address=address,
-                                                   phone_number=phone_number,
-                                                   city=city,
-                                                   zip_code=zip_code,
-                                                   pick_up_date=pick_up_date,
-                                                   pick_up_time=pick_up_time,
-                                                   pick_up_comment=pick_up_comment)
-            for category in category_to_add:
-                new_donation.categories.add(category)
-            new_donation.save()
-        else:
             all_categories = Category.objects.all()
+            my_institution = Institution.objects.get(pk=institution)
+
+            category_to_add = []
+            for category_name in categories:
+                for category in all_categories:
+                    if category_name == category.name:
+                        category_to_add.append(category)
+
+            institution_pattern = compile(r'(\d)+')
+            address_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+\s(\d)+')
+            phone_one_pattern = compile(r"(\d){3}\s(\d){3}\s(\d){3}")
+            city_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż])+')
+            zip_code_pattern = compile(r'(\d){2}-(\d){3}')
+            text_pattern = compile(r'^([AaĄąBbCcĆćDdEeĘęFfGgHhIiJjKkLlŁłMmNnŃńOoÓóPpRrSsŚśTtUuWwYyZzŹźŻż,.:\s-])+')
+
+            address_nok = False
+            phone_nok = False
+            city_nok = False
+            zip_code_nok = False
+            text_nok = False
+
+            if not institution_pattern.match(institution):
+                all_ok = False
+
+            if not address_pattern.match(address):
+                all_ok = False
+                address_nok = True
+
+            if not phone_one_pattern.match(phone_number):
+                all_ok = False
+                phone_nok = True
+
+            if not city_pattern.match(city):
+                all_ok = False
+                city_nok = True
+
+            if not zip_code_pattern.match(zip_code):
+                all_ok = False
+                zip_code_nok = True
+
+            if not text_pattern.match(pick_up_comment) and pick_up_comment != "":
+                all_ok = False
+                text_nok = True
+
+            if all_ok:
+                new_donation = Donation.objects.create(user_id=user.pk,
+                                                       quantity=quantity_of_bags,
+                                                       institution=my_institution,
+                                                       address=address,
+                                                       phone_number=phone_number,
+                                                       city=city,
+                                                       zip_code=zip_code,
+                                                       pick_up_date=pick_up_date,
+                                                       pick_up_time=pick_up_time,
+                                                       pick_up_comment=pick_up_comment)
+                for category in category_to_add:
+                    new_donation.categories.add(category)
+                new_donation.save()
+            else:
+                all_categories = Category.objects.all()
+                institutions = Institution.objects.all().order_by('pk')
+                context = {
+                    'form': 'form',
+                    'contact_form': contact_form,
+                    'logged': user.is_authenticated,
+                    'staff': user.is_staff,
+                    'categories': all_categories,
+                    'institutions': institutions,
+                    'all_ok': False,
+                    'quantity_nok': quantity_nok,
+                    'address_nok': address_nok,
+                    'phone_nok': phone_nok,
+                    'city_nok': city_nok,
+                    'zip_code_nok': zip_code_nok,
+                    'text_nok': text_nok,
+                    'set_quantity': quantity,
+                    'set_categories': categories,
+                    'set_institution': institution,
+                    'set_address': address,
+                    'set_phone_number': phone_number,
+                    'set_city': city,
+                    'set_zip_code': zip_code,
+                    'set_pick_up_date': pick_up_date,
+                    'set_pick_up_time': pick_up_time,
+                    'set_pick_up_comment': pick_up_comment,
+
+                }
+                return render(request, self.template_name, context)
+
+            return redirect('confirmation')
+
+        elif 'email_message' in request.POST:
+            contact_form = self.contact_form(request.POST)
+            contact_form = contact_form_processing(contact_form)
+            user = request.user
+            categories = Category.objects.all()
             institutions = Institution.objects.all().order_by('pk')
             context = {
                 'form': 'form',
                 'contact_form': contact_form,
                 'logged': user.is_authenticated,
                 'staff': user.is_staff,
-                'categories': all_categories,
+                'categories': categories,
                 'institutions': institutions,
-                'all_ok': False,
-                'quantity_nok': quantity_nok,
-                'address_nok': address_nok,
-                'phone_nok': phone_nok,
-                'city_nok': city_nok,
-                'zip_code_nok': zip_code_nok,
-                'text_nok': text_nok,
-                'set_quantity': quantity,
-                'set_categories': categories,
-                'set_institution': institution,
-                'set_address': address,
-                'set_phone_number': phone_number,
-                'set_city': city,
-                'set_zip_code': zip_code,
-                'set_pick_up_date': pick_up_date,
-                'set_pick_up_time': pick_up_time,
-                'set_pick_up_comment': pick_up_comment,
 
             }
             return render(request, self.template_name, context)
-
-        return redirect('confirmation')
 
 
 class LoginView(View):
@@ -211,17 +251,28 @@ class LoginView(View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')
+        if 'login' in request.POST:
+            form = LoginForm(request.POST)
+            if form.is_valid():
+                email = form.cleaned_data.get('email')
+                password = form.cleaned_data.get('password')
 
-            user = authenticate(username=email, password=password)
-            if user:
-                login(request, user)
-                return redirect('/')
-            else:
-                return redirect('/register/')
+                user = authenticate(username=email, password=password)
+                if user:
+                    login(request, user)
+                    return redirect('/')
+                else:
+                    return redirect('/register/')
+
+        elif 'email_message' in request.POST:
+            form = self.form_class
+            contact_form = self.contact_form(request.POST)
+            contact_form = contact_form_processing(contact_form)
+            context = {
+                'form': form,
+                'contact_form': contact_form,
+            }
+            return render(request, self.template_name, context)
 
 
 class RegisterView(View):
@@ -241,24 +292,35 @@ class RegisterView(View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data.get('name')
-            surname = form.cleaned_data.get('surname')
-            email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')
-            repeat_password = form.cleaned_data.get('repeat_password')
+        if 'register' in request.POST:
+            form = RegisterForm(request.POST)
+            if form.is_valid():
+                name = form.cleaned_data.get('name')
+                surname = form.cleaned_data.get('surname')
+                email = form.cleaned_data.get('email')
+                password = form.cleaned_data.get('password')
+                repeat_password = form.cleaned_data.get('repeat_password')
 
-            User.objects.create_user(username=email,
-                                     first_name=name,
-                                     last_name=surname,
-                                     email=email,
-                                     password=password)
-            return redirect('/login/')
-        else:
+                User.objects.create_user(username=email,
+                                         first_name=name,
+                                         last_name=surname,
+                                         email=email,
+                                         password=password)
+                return redirect('/login/')
+            else:
+                context = {
+                    'form': form,
+
+                }
+                return render(request, self.template_name, context)
+
+        elif 'email_message' in request.POST:
+            form = self.form_class
+            contact_form = self.contact_form(request.POST)
+            contact_form = contact_form_processing(contact_form)
             context = {
                 'form': form,
-
+                'contact_form': contact_form,
             }
             return render(request, self.template_name, context)
 
@@ -277,14 +339,24 @@ class ConfirmationView(View):
         contact_form = self.contact_form
 
         user = request.user
-        logged = False
-        if user.is_authenticated:
-            logged = True
 
         context = {
             'contact_form': contact_form,
-            'logged': logged,
-            'superuser': user.is_superuser,
+            'logged': user.is_authenticated,
+            'superuser': user.is_staff,
+
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        contact_form = self.contact_form(request.POST)
+        contact_form = contact_form_processing(contact_form)
+        user = request.user
+        context = {
+            'contact_form': contact_form,
+            'logged': user.is_authenticated,
+            'staff': user.is_staff,
+            'user': user,
 
         }
         return render(request, self.template_name, context)
@@ -294,8 +366,7 @@ class UserProfilView(LoginRequiredMixin, View):
     contact_form = ContactForm
     template_name = 'give_7_hands_templates/user_profil.html'
 
-    def get(self, request, *args, **kwargs):
-        contact_form = self.contact_form
+    def prepare_view(self, request, contact_form):
         user = request.user
         active_user_donations = Donation.objects.filter(user_id=user.pk, is_taken=False)
         inactive_user_donations = Donation.objects.filter(user_id=user.pk, is_taken=True)
@@ -309,6 +380,14 @@ class UserProfilView(LoginRequiredMixin, View):
 
         }
         return render(request, self.template_name, context)
+
+    def get(self, request, *args, **kwargs):
+        return self.prepare_view(request, self.contact_form)
+
+    def post(self, request, *args, **kwargs):
+        contact_form = self.contact_form(request.POST)
+        contact_form = contact_form_processing(contact_form)
+        return self.prepare_view(request, contact_form)
 
 
 class ChangeDonationStatusView(LoginRequiredMixin, View):
@@ -434,3 +513,17 @@ class EditUserView(LoginRequiredMixin, View):
                     'password_form': password_form,
                 }
                 return render(request, self.template_name, context)
+
+        elif 'email_message' in request.POST:
+            contact_form = self.contact_form(request.POST)
+            contact_form = contact_form_processing(contact_form)
+            context = {
+                'form': form,
+                'contact_form': contact_form,
+                'logged': user.is_authenticated,
+                'staff': user.is_staff,
+                'user': user,
+                'password_form': password_form,
+            }
+            return render(request, self.template_name, context)
+
