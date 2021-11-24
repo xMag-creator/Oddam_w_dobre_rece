@@ -308,6 +308,13 @@ class RegisterView(View):
                                          password=password,
                                          is_active=False,
                                          )
+
+                link = ''
+                title = "Aktywacja konta"
+                body = f"Żeby aktywować konto wejdź w link podany poniżej:\n{link}"
+                email = EmailMessage(title, body, email)
+                email.send()
+
                 return redirect('/login/')
             else:
                 context = {
@@ -529,3 +536,13 @@ class EditUserView(LoginRequiredMixin, View):
             }
             return render(request, self.template_name, context)
 
+
+class AccountActivationView(View):
+    contact_form = ContactForm
+    template_name = 'give_7_hands_templates/account_activation.html'
+
+    def get(self, request, *args, **kwargs):
+        pass
+
+    def post(self, request, *args, **kwargs):
+        pass

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block middle %}
+    {% if code_corect == true %}
+        <span>Konto zostało aktywowane.</span>
+    {% else %}
+        <span>Nieznany kod</span>
+    {% endif %}
+{% endblock %}
+
+{% block copyright %}
+
+{% endblock %}
